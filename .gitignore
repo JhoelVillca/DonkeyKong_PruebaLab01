@@ -15,12 +15,8 @@ Binaries/
 # Build files
 Build/
 
-# content files
-content/
-
 # Visual Studio files
 .vs/
-*.sln
 *.suo
 *.vcxproj
 *.vcxproj.filters
