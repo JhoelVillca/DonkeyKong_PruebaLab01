@@ -13,7 +13,7 @@ AProyectilBueno::AProyectilBueno()
 	//malla para el proyectil
 	mallaDeProyectilBueno = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("mallaDeProyectilBueno"));
 	//tamanio del proyectil
-	mallaDeProyectilBueno->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
+	mallaDeProyectilBueno->SetWorldScale3D(FVector(0.5f));
 	RootComponent = mallaDeProyectilBueno;
 
 	//buscar malla
@@ -31,17 +31,24 @@ AProyectilBueno::AProyectilBueno()
 	//mas componentes de movimiento
 
 	movimientoDeProyectil = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("movimientoDeProyctil"));
+	ProjectileMovement = movimientoDeProyectil; // Asignar correctamente
 	movimientoDeProyectil->UpdatedComponent = mallaDeProyectilBueno;
-	movimientoDeProyectil->InitialSpeed = 300.0f;
-	movimientoDeProyectil->MaxSpeed = 300.0f;
+	movimientoDeProyectil->InitialSpeed = 900.0f;
+	movimientoDeProyectil->MaxSpeed = 900.0f;
 	movimientoDeProyectil->ProjectileGravityScale = 0.0f;
 
+}
+void AProyectilBueno::Initialize(const FVector& Direction)
+{
+	ProjectileMovement->Velocity = Direction * ProjectileMovement->InitialSpeed; // Asegúrate de que esto sea correcto
 }
 
 // Called when the game starts or when spawned
 void AProyectilBueno::BeginPlay()
 {
 	Super::BeginPlay();
+
+	mallaDeProyectilBueno->OnComponentHit.AddDynamic(this, &AProyectilBueno::OnHit);
 	
 }
 
@@ -50,5 +57,17 @@ void AProyectilBueno::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-}
 
+
+}
+void AProyectilBueno::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	/**
+	 * Verifica si la colisión es con un actor diferente al personaje que la disparó.
+	 * Si la colisión es con un actor diferente, se destruye la esfera.
+	 */
+	if (OtherActor != nullptr && OtherActor != this && OtherActor != GetOwner())
+	{
+		Destroy();
+	}
+}

@@ -3,6 +3,7 @@
 #include "DonkeyKongGameMode.h"
 #include "DonkeyKongCharacter.h"
 #include "Plataforma.h"
+#include "CuboDisparador.h" // Asegúrate de incluir esto
 #include "CoreMinimal.h"
 #include "Kismet/KismetMathLibrary.h" // para tener algunas funciones matematicas
 #include "UObject/ConstructorHelpers.h"
@@ -59,21 +60,44 @@ void ADonkeyKongGameMode::BeginPlay()
         // Obtener las claves del TMap
         PlataformasCreadas.GetKeys(Claves); 
 
-        while (IDsSeleccionados.Num() < 3) {
+        while (IDsSeleccionados.Num() < 6) {
             int32 RandomIndex = FMath::RandRange(0, Claves.Num() - 1);
             // Obtener el ID de la plataforma
             int32 PlataformaID = Claves[RandomIndex]; 
             if (!IDsSeleccionados.Contains(PlataformaID)) {
                 IDsSeleccionados.Add(PlataformaID);
-                //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Plataforma seleccionada con ID: %d"), PlataformaID));
             }
         }
 
         // Activar el movimiento para las plataformas seleccionadas
         for (int32 ID : IDsSeleccionados) {
-            if (PlataformasCreadas.Contains(ID)) {
+            if (PlataformasCreadas.Contains(ID) && ID % 2 == 0) {
                 PlataformasCreadas[ID]->SetShouldMove(true);
-              
+            }
+        }
+
+        // Spawnear CuboDisparador en las plataformas seleccionadas
+        TArray<ACuboDisparador*> CubosDisparadores; // Array para almacenar los CuboDisparador
+        TSet<int32> IDsUsados; // Para almacenar IDs únicos
+
+        for (int32 ID : IDsSeleccionados) {
+            if (PlataformasCreadas.Contains(ID) && ID% 2 != 0) {
+                APlataforma* PlataformaSeleccionada = PlataformasCreadas[ID];
+                FVector UbicacionCubo = PlataformaSeleccionada->GetActorLocation() + FVector(0, 0, 100); // Ajusta la altura según sea necesario
+                ACuboDisparador* NuevoCuboDisparador = GetWorld()->SpawnActor<ACuboDisparador>(ACuboDisparador::StaticClass(), UbicacionCubo, FRotator(0.0f, 0.0f, 0.0f));
+                if (NuevoCuboDisparador) {
+                    int32 CuboID;
+                    do {
+                        CuboID = FMath::RandRange(0, 1000); // Rango amplio para evitar colisiones
+                    } while (IDsUsados.Contains(CuboID)); // Asegurarse de que el ID sea único
+
+                    IDsUsados.Add(CuboID); // Agregar el ID a los usados
+                    CubosDisparadores.Add(NuevoCuboDisparador); // Almacenar en el array
+
+                    if (IDsUsados.Num() >= 3) {
+                        break; // Salir del bucle una vez que tengamos 3 IDs únicos
+                    }
+                }
             }
         }
     }

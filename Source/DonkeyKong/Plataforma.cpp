@@ -55,7 +55,6 @@ void APlataforma::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (bShouldMove) {
 		float velocidadMovPlataforma = 1.0f;
-
 		float distanciaMovPlataforma = 100.0f;
 		float tiempoMovPlataforma = GetWorld()->GetTimeSeconds();
 

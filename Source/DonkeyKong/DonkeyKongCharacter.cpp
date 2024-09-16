@@ -5,6 +5,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "ProyectilBueno.h"
+#include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ADonkeyKongCharacter::ADonkeyKongCharacter()
@@ -41,8 +43,12 @@ ADonkeyKongCharacter::ADonkeyKongCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MaxFlySpeed = 600.f;
 
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+	// Inicializar la clase del proyectil
+	//static ConstructorHelpers::FClassFinder<AProyectilBueno> ProyectilAsset(TEXT("/Game/Path/To/Your/ProyectilBueno"));
+	//if (ProyectilAsset.Succeeded())
+	//{
+	//	ProjectileClass = ProyectilAsset.Class;
+	//}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -57,6 +63,10 @@ void ADonkeyKongCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &ADonkeyKongCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &ADonkeyKongCharacter::TouchStopped);
+
+	//para disparar
+
+	PlayerInputComponent->BindAction("Disparar", IE_Pressed, this, &ADonkeyKongCharacter::Disparar);
 }
 
 void ADonkeyKongCharacter::MoveRight(float Value)
@@ -76,3 +86,30 @@ void ADonkeyKongCharacter::TouchStopped(const ETouchIndex::Type FingerIndex, con
 	StopJumping();
 }
 
+void ADonkeyKongCharacter::Disparar(){
+	//ProjectileClass = AProyectilBueno::StaticClass();
+
+
+	ProjectileClass = AProyectilBueno::StaticClass();
+	if (ProjectileClass)
+	{
+		//Obtener rotacio y ubicacion para ubicar el proyectil
+		FVector SpawnLocation = GetActorLocation() + GetActorForwardVector() * 100.0f; // Ajustar la distancia de spawn
+		FRotator SpawnRotation = GetActorRotation();
+
+		// Parmetros 
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+
+		// Spawnear el proyectil
+		AProyectilBueno* SpawnedProjectile = GetWorld()->SpawnActor<AProyectilBueno>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+
+		if (SpawnedProjectile)
+		{
+			// Inicializar el proyectil con la direccin actual del personaje
+			FVector ForwardDirection = GetActorForwardVector();
+			SpawnedProjectile->Initialize(ForwardDirection);
+		}
+	}
+}
